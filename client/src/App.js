@@ -13,6 +13,9 @@ import Search from "./pages/Search";
 import Packages from "./pages/Packages";
 import AdminPanel from "./pages/AdminPanel";
 import Navbar from "./components/Navbar";
+import Itinerary from "./pages/Itinerary";
+import Alerts from "./pages/Alerts";
+import AdminItineraries from "./pages/AdminItineraries";
 
 function App() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -29,6 +32,9 @@ function App() {
         <Route path="/search" element={<Search />} />
         <Route path="/packages/:destination_id" element={<Packages />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/itinerary" element={<Itinerary />} />
+        <Route path="/alerts" element={<Alerts />} />
+        <Route path="/admin/itineraries" element={<AdminItineraries />} />
       </Routes>
     </Router>
   );

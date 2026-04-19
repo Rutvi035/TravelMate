@@ -4,6 +4,9 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const Itinerary = require("../models/Itinerary");
+const alertRoutes = require("../routes/alerts");
+const itineraryRoutes = require("../routes/itinerary");
 
 // Import models and routes
 const User = require("../models/User");
@@ -17,6 +20,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/itinerary", itineraryRoutes);
+app.use("/api/alerts", alertRoutes);
 
 // Connect to DB before tests
 beforeAll(async () => {
@@ -214,5 +219,83 @@ describe("User Profile", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.full_name).toBe("Test User Three");
     expect(res.body.preferred_destination).toBe("Tokyo");
+  });
+
+  // ─────────────────────────────────────────
+  // TEST 7: Create Itinerary
+  // ─────────────────────────────────────────
+  describe("Itinerary", () => {
+    let testUserId;
+
+    beforeAll(async () => {
+      const res = await request(app).post("/api/auth/register").send({
+        username: "itinuser",
+        email: "itinuser@test.com",
+        password: "pass123",
+      });
+      testUserId = res.body.userId;
+    });
+
+    test("Should create a new itinerary", async () => {
+      const res = await request(app).post("/api/itinerary").send({
+        user_id: testUserId,
+        title: "Paris Trip",
+        destination: "Paris",
+        start_date: "2025-06-01",
+        end_date: "2025-06-07",
+      });
+      expect(res.statusCode).toBe(201);
+      expect(res.body.message).toBe("Itinerary created successfully");
+      expect(res.body.itinerary.title).toBe("Paris Trip");
+    });
+
+    test("Should fetch itineraries for a user", async () => {
+      const res = await request(app).get(`/api/itinerary/${testUserId}`);
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ─────────────────────────────────────────
+  // TEST 8: Travel Alerts
+  // ─────────────────────────────────────────
+  describe("Travel Alerts", () => {
+    let testUserId;
+
+    beforeAll(async () => {
+      const res = await request(app).post("/api/auth/register").send({
+        username: "alertuser",
+        email: "alertuser@test.com",
+        password: "pass123",
+      });
+      testUserId = res.body.userId;
+    });
+
+    test("Should create a travel alert", async () => {
+      const res = await request(app)
+        .post("/api/alerts")
+        .send({ user_id: testUserId, destination: "Tokyo", max_price: 1500 });
+      expect(res.statusCode).toBe(201);
+      expect(res.body.message).toBe("Alert created successfully");
+      expect(res.body.alert.destination).toBe("Tokyo");
+    });
+
+    test("Should fetch alerts for a user", async () => {
+      const res = await request(app).get(`/api/alerts/${testUserId}`);
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+    });
+
+    test("Should delete a travel alert", async () => {
+      const createRes = await request(app)
+        .post("/api/alerts")
+        .send({ user_id: testUserId, destination: "Bali", max_price: 800 });
+      const alertId = createRes.body.alert._id;
+      const deleteRes = await request(app).delete(`/api/alerts/${alertId}`);
+      expect(deleteRes.statusCode).toBe(200);
+      expect(deleteRes.body.message).toBe("Alert deleted successfully");
+    });
   });
 });

@@ -14,6 +14,9 @@ const profileRoutes = require("./routes/profile");
 const searchRoutes = require("./routes/search");
 const packageRoutes = require("./routes/packages");
 const adminRoutes = require("./routes/admin");
+const itineraryRoutes = require('./routes/itinerary');
+const alertRoutes     = require('./routes/alerts');
+
 
 const app = express();
 
@@ -25,11 +28,13 @@ app.use(cors());
 app.use(express.json());
 
 // Register API routes
-app.use("/api/auth", authRoutes); // Authentication Routes
-app.use("/api/profile", profileRoutes); // User Profile Routes
-app.use("/api/search", searchRoutes); // Destination Search Routes
-app.use("/api/packages", packageRoutes);   // Travel Package Routes
-app.use("/api/admin", adminRoutes); // Admin Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/packages", packageRoutes);
+app.use("/api/admin", adminRoutes); 
+app.use("/api/itinerary", itineraryRoutes);
+app.use("/api/alerts", alertRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 5000;

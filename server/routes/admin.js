@@ -6,6 +6,7 @@
 
 const express = require("express");
 const User = require("../models/User");
+
 const router = express.Router();
 
 /**
@@ -21,6 +22,21 @@ router.get("/users", async (req, res) => {
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch users" });
+  }
+});
+
+/**
+ * Get all alerts across all users (Admin only)
+ * @route  GET /api/admin/alerts
+ * @return {Array} All alert documents
+ */
+router.get("/alerts", async (req, res) => {
+  try {
+    const Alert = require("../models/Alert");
+    const alerts = await Alert.find({});
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch alerts" });
   }
 });
 

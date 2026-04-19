@@ -5,8 +5,12 @@ import axios from "axios";
 function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
+  // const [destinations, setDestinations] = useState([]);
+  // const [totalPackages, setTotalPackages] = useState(0);
   const [destinations, setDestinations] = useState([]);
   const [totalPackages, setTotalPackages] = useState(0);
+  const [totalItineraries, setTotalItineraries] = useState(0);
+  const [totalAlerts, setTotalAlerts] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -16,13 +20,32 @@ function Dashboard() {
     fetchDestinations();
   }, []);
 
+  // const fetchDestinations = async () => {
+  //   try {
+  //     // Fetch all destinations using empty/wildcard search
+  //     const res = await axios.get("http://localhost:5000/api/search?query=");
+  //     setDestinations(res.data);
+
+  //     // Count total packages across all destinations
+  //     let count = 0;
+  //     for (const dest of res.data) {
+  //       const pkgRes = await axios.get(
+  //         `http://localhost:5000/api/packages/${dest._id}`,
+  //       );
+  //       count += pkgRes.data.length;
+  //     }
+  //     setTotalPackages(count);
+  //   } catch (error) {
+  //     console.error("Failed to fetch destinations");
+  //   }
+  // };
   const fetchDestinations = async () => {
     try {
-      // Fetch all destinations using empty/wildcard search
+      // Fetch destinations
       const res = await axios.get("http://localhost:5000/api/search?query=");
       setDestinations(res.data);
 
-      // Count total packages across all destinations
+      // Count total packages
       let count = 0;
       for (const dest of res.data) {
         const pkgRes = await axios.get(
@@ -31,11 +54,22 @@ function Dashboard() {
         count += pkgRes.data.length;
       }
       setTotalPackages(count);
+
+      // Fetch user's itineraries count
+      const itinRes = await axios.get(
+        `http://localhost:5000/api/itinerary/${user.id}`,
+      );
+      setTotalItineraries(itinRes.data.length);
+
+      // Fetch user's alerts count
+      const alertRes = await axios.get(
+        `http://localhost:5000/api/alerts/${user.id}`,
+      );
+      setTotalAlerts(alertRes.data.length);
     } catch (error) {
-      console.error("Failed to fetch destinations");
+      console.error("Failed to fetch data");
     }
   };
-
   // Emoji map for known destinations, fallback for unknown
   const getEmoji = (name) => {
     const map = {
@@ -93,8 +127,34 @@ function Dashboard() {
       </div>
 
       <div className="container">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "20px",
+            marginBottom: "30px",
+          }}
+          className="fade-in"
+        >
+          <div className="stat-card">
+            <div className="stat-number">{destinations.length}</div>
+            <div className="stat-label">Destinations</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">{totalPackages}</div>
+            <div className="stat-label">Packages</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">{totalItineraries}</div>
+            <div className="stat-label">My Itineraries</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">{totalAlerts}</div>
+            <div className="stat-label">My Alerts</div>
+          </div>
+        </div>
         {/* Stats — now dynamic */}
-        <div className="stats-row fade-in">
+        {/* <div className="stats-row fade-in">
           <div className="stat-card">
             <div className="stat-number">{destinations.length}</div>
             <div className="stat-label">Destinations</div>
@@ -107,7 +167,7 @@ function Dashboard() {
             <div className="stat-number">2s</div>
             <div className="stat-label">Avg Search Time</div>
           </div>
-        </div>
+        </div> */}
 
         {/* Quick Actions */}
         <div className="card fade-in">

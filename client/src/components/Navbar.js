@@ -36,6 +36,12 @@ function Navbar() {
             <Link to="/search" style={isActive("/search")}>
               Search
             </Link>
+            <Link to="/itinerary" style={isActive("/itinerary")}>
+              Itinerary
+            </Link>
+            <Link to="/alerts" style={isActive("/alerts")}>
+              Alerts
+            </Link>
             <Link to="/profile" style={isActive("/profile")}>
               Profile
             </Link>
