@@ -341,7 +341,7 @@ router.get("/:userId", async (req, res) => {
   try {
     const Itinerary = require("../models/Itinerary");
     const itineraries = await Itinerary.find({
-      userId: req.params.userId,
+      user_id: req.params.userId,
     }).sort({ createdAt: -1 });
     res.json(itineraries);
   } catch (error) {
@@ -360,16 +360,16 @@ router.get("/:userId", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const Itinerary = require("../models/Itinerary");
-    const { userId, title, destination, start_date, end_date, items } =
+    const { user_id, title, destination, start_date, end_date, items } =
       req.body;
 
     // Validation
-    if (!userId || !title || !destination || !start_date || !end_date) {
+    if (!user_id || !title || !destination || !start_date || !end_date) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     const newItinerary = new Itinerary({
-      userId,
+      user_id,
       title,
       destination,
       start_date,
@@ -393,6 +393,36 @@ router.post("/", async (req, res) => {
  * @body   {Object} Updated itinerary data
  * @return {Object} Updated itinerary
  */
+/**
+ * Add an item to an itinerary's schedule
+ * @route  PUT /api/itinerary/:id/items
+ * @access Public
+ * @param  {String} id - Itinerary ID
+ * @body   {Object} Item data (time, activity, notes)
+ * @return {Object} Updated itinerary
+ */
+router.put("/:id/items", async (req, res) => {
+  try {
+    const Itinerary = require("../models/Itinerary");
+    const { time, activity, notes } = req.body;
+
+    const updatedItinerary = await Itinerary.findByIdAndUpdate(
+      req.params.id,
+      { $push: { items: { time, activity, notes } } },
+      { new: true },
+    );
+
+    if (!updatedItinerary) {
+      return res.status(404).json({ message: "Itinerary not found" });
+    }
+
+    res.json(updatedItinerary);
+  } catch (error) {
+    console.error("Error adding item:", error);
+    res.status(500).json({ message: "Failed to add item" });
+  }
+});
+
 router.put("/:id", async (req, res) => {
   try {
     const Itinerary = require("../models/Itinerary");

@@ -6,6 +6,7 @@
 
 const express = require("express");
 const User = require("../models/User");
+const Alert = require("../models/Alert");
 
 const router = express.Router();
 
@@ -28,15 +29,33 @@ router.get("/users", async (req, res) => {
 /**
  * Get all alerts across all users (Admin only)
  * @route  GET /api/admin/alerts
- * @return {Array} All alert documents
+ * @return {Array} All alert documents with user info
  */
 router.get("/alerts", async (req, res) => {
   try {
-    const Alert = require("../models/Alert");
-    const alerts = await Alert.find({});
+    const alerts = await Alert.find({})
+      .populate("user_id", "username email")
+      .sort({ createdAt: -1 });
     res.json(alerts);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch alerts" });
+  }
+});
+
+/**
+ * Get all itineraries across all users (Admin only)
+ * @route  GET /api/admin/itineraries
+ * @return {Array} All itinerary documents with user info
+ */
+router.get("/itineraries", async (req, res) => {
+  try {
+    const Itinerary = require("../models/Itinerary");
+    const itineraries = await Itinerary.find({})
+      .populate("user_id", "username email")
+      .sort({ createdAt: -1 });
+    res.json(itineraries);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch itineraries" });
   }
 });
 

@@ -3,6 +3,7 @@ import axios from "axios";
 
 function Alerts() {
   const user = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = user?.role === "admin";
   const [alerts, setAlerts] = useState([]);
   const [form, setForm] = useState({ destination: "", max_price: "" });
   const [message, setMessage] = useState("");
@@ -12,12 +13,13 @@ function Alerts() {
     fetchAlerts();
   }, []);
 
-  // Fetch all alerts for logged-in user
+  // Fetch all alerts for logged-in user (or all users if admin)
   const fetchAlerts = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/alerts/${user.id}`,
-      );
+      const url = isAdmin
+        ? "http://localhost:5000/api/admin/alerts"
+        : `http://localhost:5000/api/alerts/${user.id}`;
+      const res = await axios.get(url);
       setAlerts(res.data);
     } catch (error) {
       console.error("Failed to fetch alerts");
@@ -58,73 +60,91 @@ function Alerts() {
   return (
     <div className="container">
       <div className="page-header">
-        <h2>🔔 Travel Alerts</h2>
-        <p>Subscribe to price alerts for your favourite destinations</p>
+        <h2>🔔 {isAdmin ? "All User Alerts" : "Travel Alerts"}</h2>
+        <p>
+          {isAdmin
+            ? "View price alerts created by all users"
+            : "Subscribe to price alerts for your favourite destinations"}
+        </p>
       </div>
 
-      {/* Create Alert Form */}
-      <div className="card fade-in">
-        <h3 style={{ marginBottom: "20px", fontSize: "20px" }}>
-          Create New Alert
-        </h3>
-        {message && (
-          <div className={`alert ${isError ? "alert-error" : "alert-success"}`}>
-            {isError ? "⚠️" : "✅"} {message}
-          </div>
-        )}
-        <form onSubmit={handleCreate}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
-            <div className="form-group">
-              <label>Destination</label>
-              <input
-                type="text"
-                placeholder="e.g. Paris"
-                required
-                value={form.destination}
-                onChange={(e) =>
-                  setForm({ ...form, destination: e.target.value })
-                }
-              />
+      {/* Create Alert Form — hidden for admin */}
+      {!isAdmin && (
+        <div className="card fade-in">
+          <h3 style={{ marginBottom: "20px", fontSize: "20px" }}>
+            Create New Alert
+          </h3>
+          {message && (
+            <div
+              className={`alert ${isError ? "alert-error" : "alert-success"}`}
+            >
+              {isError ? "⚠️" : "✅"} {message}
             </div>
-            <div className="form-group">
-              <label>Maximum Price (USD)</label>
-              <input
-                type="number"
-                placeholder="e.g. 1000"
-                required
-                value={form.max_price}
-                onChange={(e) =>
-                  setForm({ ...form, max_price: e.target.value })
-                }
-              />
+          )}
+          <form onSubmit={handleCreate}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+              }}
+            >
+              <div className="form-group">
+                <label>Destination</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Paris"
+                  required
+                  value={form.destination}
+                  onChange={(e) =>
+                    setForm({ ...form, destination: e.target.value })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label>Maximum Price (USD)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 1000"
+                  required
+                  value={form.max_price}
+                  onChange={(e) =>
+                    setForm({ ...form, max_price: e.target.value })
+                  }
+                />
+              </div>
             </div>
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: "100%", justifyContent: "center", padding: "14px" }}
-          >
-            Subscribe to Alert →
-          </button>
-        </form>
-      </div>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                padding: "14px",
+              }}
+            >
+              Subscribe to Alert →
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Active Alerts */}
       <div className="page-header" style={{ marginTop: "10px" }}>
-        <h2>My Active Alerts ({alerts.length})</h2>
+        <h2>
+          {isAdmin
+            ? `All Active Alerts (${alerts.length})`
+            : `My Active Alerts (${alerts.length})`}
+        </h2>
       </div>
 
       {alerts.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: "40px" }}>
           <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔕</div>
           <p style={{ color: "#8a8a8a" }}>
-            No alerts yet. Create one above to get notified of price drops!
+            {isAdmin
+              ? "No alerts found."
+              : "No alerts yet. Create one above to get notified of price drops!"}
           </p>
         </div>
       ) : (
@@ -202,22 +222,43 @@ function Alerts() {
                   >
                     🟢 Active
                   </span>
+                  {isAdmin && alert.user_id && (
+                    <p style={{ marginTop: "10px", fontSize: "13px" }}>
+                      <span
+                        style={{
+                          background: "#e8b84b",
+                          color: "#0a1628",
+                          borderRadius: "12px",
+                          padding: "2px 10px",
+                          fontWeight: "600",
+                          marginRight: "8px",
+                        }}
+                      >
+                        👤 {alert.user_id.username}
+                      </span>
+                      <span style={{ color: "#8a8a8a" }}>
+                        {alert.user_id.email}
+                      </span>
+                    </p>
+                  )}
                 </div>
-                <button
-                  onClick={() => handleDelete(alert._id)}
-                  style={{
-                    background: "#fee2e2",
-                    color: "#dc2626",
-                    border: "none",
-                    padding: "6px 12px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Delete
-                </button>
+                {!isAdmin && (
+                  <button
+                    onClick={() => handleDelete(alert._id)}
+                    style={{
+                      background: "#fee2e2",
+                      color: "#dc2626",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
               <p
                 style={{
